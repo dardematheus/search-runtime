@@ -2,6 +2,7 @@
 #include <stdbool.h>
 #include <math.h>
 #include <time.h>
+#include <stdlib.h>
 
 const char *algorithm_menu =
     "Which algorithm do you want to test out?\n"
@@ -9,23 +10,22 @@ const char *algorithm_menu =
     "2 - Exponential Search\n"
     "3 - N Search\n";
 
-const char *target_menu = 
-    "Which number do you want to find?";
+int* bubble_sort(int arr[], int size){
+    int aux;
+    for(int i = 0; i < size - 1; i++){
+        for(int j = 0; j < size - 1 - i; j++){
+            if(arr[j] > arr[j + 1]){
+                aux = arr[j];
+                arr[j] = arr[j + 1];
+                arr[j + 1] = aux;
+            }
+        }
+    }
+    return arr;
+}
 
-const char *size_menu =
-    "\nWhich array size?\n"
-    "1 - 10\n"
-    "2 - 50\n"
-    "3 - 100\n";
 
 int binary_search(int target, int arr[], int left, int right){
-    if(!left){
-        left = 0;
-    }
-    if(!right){
-        right = sizeof(arr) / sizeof(arr[left]) - 1;
-    }
-
     bool found = false;
     int index = right / 2;
 
@@ -43,63 +43,86 @@ int binary_search(int target, int arr[], int left, int right){
             return index;
         }
     }
-    return 0;
+    return -1;
 }
 
-int exponential_search(int target){
-    int arr[50] = {
-        1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
-        11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
-        21, 22, 23, 24, 25, 26, 27, 28, 29, 30,
-        31, 32, 33, 34, 35, 36, 37, 38, 39, 40,
-        41, 42, 43, 44, 45, 46, 47, 48, 49, 50
-    };
-
+int exponential_search(int target, int arr[], int size){
     int left = 0;
-    int index = 0;
-    int right = sizeof(arr) / sizeof(arr[left]) - 1;
+    int index = 1;
+    int right = size;
 
-    while(target > arr[index]){
-        if (index == 0){
-            index++;
-            left = index;
-            index *= 2;
-        }
+    if (arr[0] == target){
+        return 0;
+    }
+
+    while(index < size && target > arr[index]){
         left = index;
         index *= 2;
     }
+
     right = index;
     return binary_search(target, arr, left, right);
 }
 
-int n_search(int target, int arr[]){
-    int size = sizeof(arr) - 1;
+int n_search(int target, int arr[], int size){
     for(int i = 0; i < size; i++){
         if (arr[i] == target){
             return i;
         }
     }
-    return 0;
+    return -1;
 }
 
-int arr_allocation(int size){
-    return 0;
+int* arr_allocation(int size){
+    int *arr = malloc(size * sizeof(int));
+    for(int i = 0; i < size; i++){
+        arr[i] = rand() % size;
+    }
+    return arr;
 }
 
 void main(){
-    int choice;
-    int target;
-    int arraysize;
+    int choice, target, arraysize;
+    clock_t start_time, end_time;
+    double cpu_time_used;
 
     printf("%s", algorithm_menu);
     scanf("%d", &choice);
 
-    printf("%s", target_menu);
+    printf("Which number do you want to find?\n");
     scanf("%d", &target);
 
-    printf("%s", size_menu);
+    printf("Which size do you want the array to be?\n");
     scanf("%d", &arraysize);
+    
+    int *arr = arr_allocation(arraysize);
+    int *sorted = bubble_sort(arr, arraysize);
 
-    int pos = exponential_search(target);
-    printf("Number %d found at position %d", target, pos);
+    switch(choice){
+        case 1:
+            start_time = clock();
+            int pos = binary_search(target, sorted, 0, arraysize - 1);
+            end_time = clock();
+            cpu_time_used = ((double) (end_time - start_time)) / CLOCKS_PER_SEC;
+            printf("Number %d found in position %d\n", target, pos);
+            printf("\nAlgorithm Execution time: %f seconds\n", cpu_time_used);
+            break;
+        case 2:
+            start_time = clock();
+            pos = exponential_search(target, sorted, arraysize);
+            end_time = clock();
+            cpu_time_used = ((double) (end_time - start_time)) / CLOCKS_PER_SEC;
+            printf("Number %d found in position %d\n", target, pos);
+            printf("\nAlgorithm Execution time: %.10f seconds\n", cpu_time_used);
+            break;
+        case 3:
+            start_time = clock();
+            pos = n_search(target, sorted, arraysize);
+            end_time = clock();
+            cpu_time_used = ((double) (end_time - start_time)) / CLOCKS_PER_SEC;
+            printf("Number %d found in position %d\n", target, pos);
+            printf("\nAlgorithm Execution time: %f seconds\n", cpu_time_used);
+            break;
+    }
+    free(arr);
 }
